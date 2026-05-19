@@ -1,0 +1,9 @@
+pandas
+numpy
+scikit-learn
+sqlalchemy
+pymongo
+requests
+beautifulsoup4
+plotly
+pyarrow
