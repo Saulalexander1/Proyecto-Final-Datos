@@ -5,13 +5,10 @@ from sqlalchemy import create_engine
 from pymongo import MongoClient
 import xml.etree.ElementTree as ET
 
-# 1. BASES DE DATOS (SQL & NoSQL)
+#BASES DE DATOS (SQL & NoSQL)
 
 def extract_from_sql():
     """Conecta a la base de datos relacional (MySQL/PostgreSQL) y extrae las ventas."""
-    # Configura tu cadena de conexión real aquí (Ejemplo para PostgreSQL o MySQL)
-    # PostgreSQL: 'postgresql://usuario:contraseña@localhost:5432/mi_base_datos'
-    # MySQL: 'mysql+pymysql://usuario:contraseña@localhost:3306/mi_base_datos'
     DATABASE_URI = 'mysql+pymysql://root:123456789@localhost:3306/ventas_historicas'
     
     engine = create_engine(DATABASE_URI)
@@ -44,7 +41,7 @@ def extract_from_mongodb():
     return df_mongo
 
 
-# 2. ARCHIVOS PLANOS Y ESTRUCTURADOS
+#ARCHIVOS PLANOS Y ESTRUCTURADOS
 
 def extract_csv(file_path='datos/inventario.csv'):
     """Lee el archivo plano de inventario con datos crudos."""
@@ -83,7 +80,7 @@ def extract_excel(file_path='datos/metas_anuales.xlsx'):
     return pd.read_excel(file_path)
 
 
-# 3. FUENTES EXTERNAS (API & WEB SCRAPING)
+#FUENTES EXTERNAS (API & WEB SCRAPING)
 
 def extract_from_api(api_url="https://api.exchangerate-api.com/v4/latest/USD"):
     """Consume una API REST real para obtener tipos de cambio de monedas."""
