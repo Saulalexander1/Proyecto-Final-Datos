@@ -4,6 +4,10 @@ import Transformacion
 import Analisis
 import Visualizador
 import sys
+import importlib
+
+# Esto obliga a Python a recargar el archivo por si se quedó pegado en la memoria caché
+importlib.reload(Extraccion)
 
 def run_pipeline():
     print("="*50)
@@ -13,18 +17,34 @@ def run_pipeline():
     try:
         # EXTRACCIÓN (Extract)
         print("\n[1/5] FASE DE EXTRACCIÓN DE DATOS...")
-        # Nota: Asegúrate de que tu base de datos SQL y MongoDB estén corriendo
-        df_ventas = Extraccion.extract_sql()
-        df_perfiles = Extraccion.extract_nosql()
-        df_inventario = Extraccion.extract_csv()
         
-        # Extracción de otras fuentes (Opcional, se guardan en memoria)
-        # df_api = Extraccion.extract_from_api()
-        # df_competencia = Extraccion.extract_from_web_scraping()
+        # --- BLOQUE DE AUTO-CORRECCIÓN DE FUNCIONES ---
+        # 1. Intentamos leer SQL
+        if hasattr(Extraccion, 'extract_from_sql'):
+            df_ventas = Extraccion.extract_from_sql()
+        elif hasattr(Extraccion, 'extract_sql'):
+            df_ventas = Extraccion.extract_sql()
+        else:
+            raise AttributeError("No se encontró ninguna función para extraer SQL en Extraccion.py")
+
+        # 2. Intentamos leer Mongo
+        if hasattr(Extraccion, 'extract_from_mongodb'):
+            df_perfiles = Extraccion.extract_from_mongodb()
+        elif hasattr(Extraccion, 'extract_nosql'):
+            df_perfiles = Extraccion.extract_nosql()
+        else:
+            raise AttributeError("No se encontró ninguna función para extraer Mongo en Extraccion.py")
+
+        # 3. Intentamos leer CSV
+        try:
+            df_inventario = Extraccion.extract_csv('inventario.csv')
+        except TypeError:
+            df_inventario = Extraccion.extract_csv()
+        # ----------------------------------------------
+
 
         # TRANSFORMACIÓN (Transform)
         print("\n[2/5] FASE DE TRANSFORMACIÓN Y LIMPIEZA...")
-        # Pasamos los DataFrames crudos al pipeline de transformación
         df_master_transformado, df_inventario_clean = Transformacion.run_transformation_pipeline(
             df_ventas=df_ventas, 
             df_perfiles=df_perfiles, 
@@ -33,20 +53,17 @@ def run_pipeline():
 
         # ANALÍTICA AVANZADA (PCA)
         print("\n[3/5] FASE DE ANALÍTICA AVANZADA...")
-        # Aplicamos el modelo PCA para reducir las variables de comportamiento a 3 dimensiones
         df_final = Analisis.apply_advanced_analytics(df_master_transformado)
 
         # CARGA Y ALMACENAMIENTO (Load)
         print("\n[4/5] FASE DE ALMACENAMIENTO Y EXPORTACIÓN...")
         output_file = 'data_master_clean.parquet'
         
-        # Guardamos el archivo optimizado
         df_final.to_parquet(output_file, index=False)
         print(f"[ÉXITO] Repositorio maestro guardado como: {output_file}")
 
         # VISUALIZACIÓN (Dashboarding)
         print("\n[5/5] FASE DE VISUALIZACIÓN DE INSIGHTS...")
-        # Llama a las gráficas (Boxplots, Scatter, Sankey)
         Visualizador.generate_dashboard()
 
         print("\n" + "="*50)
@@ -56,9 +73,7 @@ def run_pipeline():
     except Exception as e:
         print("\n[ERROR CRÍTICO] El pipeline se ha detenido debido a un error:")
         print(f"Detalle: {e}")
-        print("Por favor, revisa tus conexiones a bases de datos y la existencia de los archivos.")
         sys.exit(1)
 
 if __name__ == "__main__":
-    # Ejecuta el orquestador solo si el archivo es llamado directamente
     run_pipeline()
